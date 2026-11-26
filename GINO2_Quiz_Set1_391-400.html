@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GINO2 生産管理 - ชุดที่ 1 (問391-問400)</title>
+<style>
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --bg: #F3F4F6;
+    --card: #FFFFFF;
+    --text: #1F2937;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --correct-bg: #ECFDF5;
+    --correct-border: #10B981;
+    --correct-text: #065F46;
+    --wrong-bg: #FEF2F2;
+    --wrong-border: #EF4444;
+    --wrong-text: #991B1B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans Thai", sans-serif; }
+  body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
+  .app-container { width: 100%; max-width: 480px; background: var(--bg); display: flex; flex-direction: column; min-height: 100vh; position: relative; padding-bottom: 84px; }
+  
+  /* Header */
+  .top-bar { background: var(--card); padding: 12px 16px 10px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  .app-title { text-align: center; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .btn-pill-sm { background: #F9FAFB; border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; }
+  .chapter-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  
+  .status-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; }
+  .score-text { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+  .score-text span.c { color: #10B981; }
+  .score-text span.w { color: #EF4444; }
+  .toggle-group { display: flex; gap: 6px; }
+  .btn-toggle { border: 1.5px solid var(--primary); background: var(--card); color: var(--primary); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.15s; }
+  .btn-toggle.active { background: var(--primary-light); }
+  
+  .progress-track { width: 100%; height: 5px; background: #E5E7EB; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); width: 10%; transition: width 0.25s ease; }
+
+  /* Card */
+  .content-area { padding: 14px 16px; flex: 1; }
+  .q-card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .badges { display: flex; gap: 6px; }
+  .badge-green { background: #D1FAE5; color: #065F46; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; }
+  .badge-purple { background: #EDE9FE; color: #5B21B6; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; }
+  .star-btn { background: none; border: none; font-size: 24px; color: #9CA3AF; cursor: pointer; line-height: 1; }
+  .star-btn.starred { color: #F59E0B; }
+
+  .q-jp { font-size: 18px; font-weight: 700; line-height: 1.85; color: #111827; margin-bottom: 8px; }
+  .q-th { font-size: 14px; color: #4B5563; background: #F9FAFB; padding: 8px 12px; border-radius: 10px; border-left: 3px solid var(--primary); margin-bottom: 16px; line-height: 1.5; }
+  
+  ruby rt { font-size: 10px; color: #6B7280; font-weight: 500; }
+  body.hide-furigana ruby rt { display: none; }
+  body.hide-thai .th-text { display: none; }
+
+  /* Options */
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: 0.15s; }
+  .opt-btn:active { transform: scale(0.99); }
+  .opt-label { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .opt-content { flex: 1; }
+  .opt-jp { font-size: 16px; font-weight: 600; line-height: 1.75; color: #1F2937; }
+  .opt-th { font-size: 13px; color: #6B7280; margin-top: 4px; line-height: 1.4; }
+
+  .opt-btn.correct { background: var(--correct-bg); border-color: var(--correct-border); }
+  .opt-btn.correct .opt-label { background: var(--correct-border); color: #fff; }
+  .opt-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong-border); }
+  .opt-btn.wrong .opt-label { background: var(--wrong-border); color: #fff; }
+
+  /* Explanation Box */
+  .exp-box { margin-top: 16px; padding: 14px; border-radius: 12px; background: #FFFBEB; border: 1px solid #FDE68A; display: none; }
+  .exp-box.show { display: block; }
+  .exp-title { font-size: 13px; font-weight: 700; color: #92400E; margin-bottom: 4px; }
+  .exp-text { font-size: 13.5px; color: #78350F; line-height: 1.55; }
+
+  /* Jump button */
+  .jump-row { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .btn-jump { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+
+  /* Footer Nav */
+  .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: var(--card); border-top: 1px solid var(--border); padding: 12px 16px; display: flex; gap: 12px; z-index: 10; }
+  .nav-btn { flex: 1; padding: 13px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; text-align: center; }
+  .nav-prev { background: #F3F4F6; color: #4B5563; }
+  .nav-next { background: var(--primary); color: #FFFFFF; }
+
+  /* Modal */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+  .modal-backdrop.open { display: flex; }
+  .modal-sheet { background: var(--card); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 75vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .grid-nums { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .num-item { padding: 10px 0; border-radius: 10px; border: 1px solid var(--border); background: #F9FAFB; font-weight: 700; font-size: 13px; text-align: center; cursor: pointer; position: relative; }
+  .num-item.current { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .num-item.done-ok { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
+  .num-item.done-no { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong-text); }
+  .num-star { position: absolute; top: 2px; right: 4px; font-size: 10px; color: #F59E0B; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="top-bar">
+    <div class="app-title">GINO2 生産管理 — ชุดที่ 1 (問391 – 問400)</div>
+    <div class="header-row">
+      <button class="btn-pill-sm" onclick="resetQuiz()">↻ เริ่มใหม่</button>
+      <div class="chapter-title">การตีขึ้นรูป การหล่อ และการเชื่อม</div>
+      <div style="width:60px"></div>
+    </div>
+    <div class="status-row">
+      <div class="score-text">ข้อ <span id="q-idx">1</span> / <span id="q-total">10</span> · ถูก <span class="c" id="c-cnt">0</span> · ผิด <span class="w" id="w-cnt">0</span></div>
+      <div class="toggle-group">
+        <button class="btn-toggle active" id="btn-furi" onclick="toggleFurigana()">ฟุริงะนะ: เปิด</button>
+        <button class="btn-toggle active" id="btn-thai" onclick="toggleThai()">คำแปล: เปิด</button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="prog-bar"></div></div>
+  </div>
+
+  <div class="content-area">
+    <div class="q-card">
+      <div class="card-top">
+        <div class="badges">
+          <span class="badge-green" id="q-code">問391</span>
+          <span class="badge-purple" id="q-cat">加工・鋳造・溶接</span>
+        </div>
+        <button class="star-btn" id="star-btn" onclick="toggleStar()">☆</button>
+      </div>
+      
+      <div class="q-jp" id="q-jp"></div>
+      <div class="q-th th-text" id="q-th"></div>
+      
+      <div class="options-list" id="opt-list"></div>
+      
+      <div class="exp-box" id="exp-box">
+        <div class="exp-title">💡 คำอธิบายและเฉลย</div>
+        <div class="exp-text" id="exp-text"></div>
+      </div>
+    </div>
+
+    <div class="jump-row">
+      <button class="btn-jump" onclick="openModal()">ไปยังข้อ... (ทำแล้ว <span id="done-cnt">0</span>/10)</button>
+      <button class="btn-jump" onclick="toggleExpManual()">ดูเฉลยข้อนี้</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn nav-prev" onclick="prevQ()">← ก่อนหน้า</button>
+    <button class="nav-btn nav-next" id="next-btn" onclick="nextQ()">ข้าม →</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">เลือกข้อสอบ (問391 – 問400)</div>
+      <button class="btn-pill-sm" onclick="document.getElementById('modal').classList.remove('open')">ปิด</button>
+    </div>
+    <div class="grid-nums" id="grid-nums"></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    code: "問391",
+    cat: "鍛造法 (การตีขึ้นรูป)",
+    jp: "<ruby>鍛造法<rt>たんぞうほう</rt></ruby>の<ruby>特徴<rt>とくちょう</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดกล่าวถึงลักษณะเด่นของวิธีการตีขึ้นรูป (Forging) ได้อย่างเหมาะสม",
+    options: [
+      { jp: "<ruby>金属<rt>きんぞく</rt></ruby>へ<ruby>直接<rt>ちょくせつ</rt></ruby><ruby>圧入<rt>あつにゅう</rt></ruby>するため<ruby>高強度<rt>こうきょうど</rt></ruby><ruby>金属<rt>きんぞく</rt></ruby>には<ruby>加工<rt>かこう</rt></ruby>しやすい。", th: "เนื่องจากเป็นการกดอัดลงบนโลหะโดยตรง จึงแปรรูปโลหะที่มีความแข็งแรงสูงได้ง่าย" },
+      { jp: "<ruby>衝撃力<rt>しょうげきりょく</rt></ruby>で<ruby>加工<rt>かこう</rt></ruby>するため、<ruby>金属<rt>きんぞく</rt></ruby>の<ruby>方向性<rt>ほうこうせい</rt></ruby>に<ruby>対<rt>たい</rt></ruby>して<ruby>弱<rt>よわ</rt></ruby>い。", th: "เนื่องจากแปรรูปด้วยแรงกระแทก จึงมีความอ่อนแอต่อทิศทางของเนื้อโลหะ" },
+      { jp: "<ruby>砂型<rt>すながた</rt></ruby>を<ruby>使<rt>つか</rt></ruby>って<ruby>取<rt>と</rt></ruby>り<ruby>出<rt>だ</rt></ruby>すため<ruby>寸法精度<rt>すんぽうせいど</rt></ruby>に<ruby>優<rt>すぐ</rt></ruby>れている。", th: "เนื่องจากใช้แม่พิมพ์ทรายแล้วนำชิ้นงานออกมา จึงมีความแม่นยำด้านขนาดสูง" }
+    ],
+    ans: 2,
+    exp: "ตามเฉลยในเอกสารที่วงไว้คือข้อ ウ (หมายเหตุ: ตามหลักวิศวกรรม 鍛造 คือการทุบ/อัดขึ้นรูปโลหะให้แข็งแรง ส่วนการใช้แม่พิมพ์ทรายคือการหล่อ 鋳造)"
+  },
+  {
+    code: "問392",
+    cat: "ダイカスト (การหล่อฉีด)",
+    jp: "ダイカストの<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของการหล่อแบบฉีดขึ้นรูป (Die Casting)",
+    options: [
+      { jp: "<ruby>溶融金属<rt>ようゆうきんぞく</rt></ruby>を<ruby>高温高圧<rt>こうおんこうあつ</rt></ruby>で<ruby>圧入<rt>あつにゅう</rt></ruby>し、<ruby>高密度<rt>こうみつど</rt></ruby>の<ruby>製品<rt>せいひん</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีฉีดอัดโลหะหลอมเหลวด้วยอุณหภูมิสูงและความดันสูง เพื่อสร้างผลิตภัณฑ์ที่มีความหนาแน่นสูง" },
+      { jp: "<ruby>手工具<rt>てこうぐ</rt></ruby>で<ruby>素材<rt>そざい</rt></ruby>を<ruby>塑性変形<rt>そせいへんけい</rt></ruby>し、<ruby>大量生産品<rt>たいりょうせいさんひん</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีทำให้วัสดุเสียรูปถาวรด้วยเครื่องมือช่าง เพื่อผลิตสินค้าจำนวนมาก" },
+      { jp: "<ruby>砥石<rt>といし</rt></ruby>で<ruby>表面<rt>ひょうめん</rt></ruby>を<ruby>微細<rt>びさい</rt></ruby>に<ruby>削<rt>けず</rt></ruby>り、<ruby>高精度<rt>こうせいど</rt></ruby>に<ruby>仕上<rt>しあ</rt></ruby>げる<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเจียระไนผิวหน้าอย่างละเอียดด้วยหินเจียร เพื่อให้ได้งานที่มีความแม่นยำสูง" },
+      { jp: "<ruby>砂型<rt>すながた</rt></ruby>へ<ruby>注入<rt>ちゅうにゅう</rt></ruby>し<ruby>凝固<rt>ぎょうこ</rt></ruby>し、<ruby>複雑<rt>ふくざつ</rt></ruby>な<ruby>形状<rt>けいじょう</rt></ruby>の<ruby>製品<rt>せいひん</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเทน้ำโลหะลงในแม่พิมพ์ทรายให้แข็งตัว เพื่อสร้างผลิตภัณฑ์ที่มีรูปร่างซับซ้อน" }
+    ],
+    ans: 3,
+    exp: "ตามเฉลยในเอกสารวงข้อ エ ไว้ (หมายเหตุเพิ่มเติม: ตามนิยามจริง Die Casting คือข้อ ア การฉีดโลหะหลอมเหลวเข้าแม่พิมพ์โลหะด้วยความดันสูง)"
+  },
+  {
+    code: "問393",
+    cat: "鋳造欠陥 (ข้อบกพร่องงานหล่อ)",
+    jp: "<ruby>鋳造<rt>ちゅうぞう</rt></ruby>での<ruby>引<rt>ひ</rt></ruby>け<ruby>巣<rt>す</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของโพรงหดตัว (Shrinkage Cavity / 引け巣) ในงานหล่อ",
+    options: [
+      { jp: "<ruby>巻<rt>ま</rt></ruby>き<ruby>込<rt>こ</rt></ruby>まれたガスが<ruby>放出<rt>ほうしゅつ</rt></ruby>できずに<ruby>残留<rt>ざんりゅう</rt></ruby>する<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่ก๊าซที่ถูกดึงเข้าไปไม่สามารถระบายออกได้และตกค้างอยู่ (โพรงก๊าซ)" },
+      { jp: "<ruby>湯<rt>ゆ</rt></ruby>の<ruby>流<rt>なが</rt></ruby>れの<ruby>乱<rt>みだ</rt></ruby>れで<ruby>鋳物<rt>いもの</rt></ruby>の<ruby>表面<rt>ひょうめん</rt></ruby>に<ruby>渦状<rt>うずじょう</rt></ruby>に<ruby>生<rt>しょう</rt></ruby>じる<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่เกิดเป็นรอยวนบนผิวชิ้นงานหล่อจากการไหลปั่นป่วนของน้ำโลหะ" },
+      { jp: "<ruby>溶湯<rt>ようとう</rt></ruby>の<ruby>供給<rt>きょうきゅう</rt></ruby>の<ruby>不足<rt>ふそく</rt></ruby>や<ruby>凝固<rt>ぎょうこ</rt></ruby>の<ruby>速度差<rt>そくどさ</rt></ruby>で<ruby>生<rt>しょう</rt></ruby>じる<ruby>空洞不良<rt>くうどうふりょう</rt></ruby>。", th: "ข้อบกพร่องที่เป็นโพรงว่าง เกิดจากการป้อนน้ำโลหะไม่พอหรือความแตกต่างของความเร็วในการแข็งตัว" },
+      { jp: "<ruby>凝固時<rt>ぎょうこじ</rt></ruby>の<ruby>体積収縮<rt>たいせきしゅうしゅく</rt></ruby>が<ruby>鋳物<rt>いもの</rt></ruby>に<ruby>割<rt>わ</rt></ruby>れや<ruby>変形<rt>へんけい</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>す<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่การหดตัวของปริมาตรขณะแข็งตัวทิ้งรอยแตกหรือการบิดเบี้ยวไว้ที่ชิ้นงาน" }
+    ],
+    ans: 2,
+    exp: "ถูกต้อง! 引け巣 (Shrinkage cavity) คือโพรงว่างภายในชิ้นงานหล่อ เกิดจากการหดตัวขณะเย็นตัวลงโดยไม่มีน้ำโลหะเติมเข้าไปชดเชยได้ทัน"
+  },
+  {
+    code: "問394",
+    cat: "鋳造対策 (การแก้ไขงานหล่อ)",
+    jp: "<ruby>鋳物<rt>いもの</rt></ruby>の<ruby>表面近<rt>ひょうめんちか</rt></ruby>くにヒケが<ruby>発生<rt>はっせい</rt></ruby>した。<ruby>適切<rt>てきせつ</rt></ruby>な<ruby>対策<rt>たいさく</rt></ruby>はどれか。",
+    th: "เกิดรอยยุบตัว (Sink mark / ヒケ) บริเวณใกล้ผิวของชิ้นงานหล่อ มาตรการแก้ไขที่เหมาะสมคือข้อใด",
+    options: [
+      { jp: "<ruby>溶湯<rt>ようとう</rt></ruby>の<ruby>流動性<rt>りゅうどうせい</rt></ruby>を<ruby>下<rt>さ</rt></ruby>げるため<ruby>処理温度<rt>しょりおんど</rt></ruby>を<ruby>高<rt>たか</rt></ruby>める。", th: "เพิ่มอุณหภูมิการหลอมเพื่อลดความสามารถในการไหลตัวของน้ำโลหะ" },
+      { jp: "<ruby>注湯速度<rt>ちゅうとうそくど</rt></ruby>を<ruby>極端<rt>きょくたん</rt></ruby>に<ruby>下<rt>さ</rt></ruby>げて<ruby>湯流<rt>ゆなが</rt></ruby>れを<ruby>止<rt>と</rt></ruby>める。", th: "ลดความเร็วในการเทน้ำโลหะลงอย่างมากเพื่อหยุดการไหล" },
+      { jp: "<ruby>合<rt>あ</rt></ruby>わせ<ruby>面<rt>めん</rt></ruby>のばりを<ruby>増<rt>ふ</rt></ruby>やすため<ruby>圧力<rt>あつりょく</rt></ruby>を<ruby>上<rt>あ</rt></ruby>げる。", th: "เพิ่มแรงดันเพื่อเพิ่มครีบ (Burr) บริเวณรอยประกบแม่พิมพ์" },
+      { jp: "<ruby>押湯<rt>おしゆ</rt></ruby>を<ruby>適切<rt>てきせつ</rt></ruby>に<ruby>設<rt>もう</rt></ruby>けて<ruby>凝固収縮<rt>ぎょうこしゅうしゅく</rt></ruby>を<ruby>補<rt>おぎな</rt></ruby>う。", th: "ติดตั้งรูเติมน้ำโลหะสำรอง (Riser / 押湯) อย่างเหมาะสม เพื่อชดเชยการหดตัวขณะแข็งตัว" }
+    ],
+    ans: 3,
+    exp: "ถูกต้อง! การติดตั้ง 押湯 (Riser) ช่วยกักเก็บน้ำโลหะสำรองไว้ป้อนเติมเข้าไปในแม่พิมพ์เมื่อเนื้อโลหะเกิดการหดตัวขณะเย็นลง"
+  },
+  {
+    code: "問395",
+    cat: "溶接 (การเชื่อม)",
+    jp: "<ruby>被覆<rt>ひふく</rt></ruby>アーク<ruby>溶接<rt>ようせつ</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของการเชื่อมอาร์กด้วยลวดเชื่อมหุ้มฟลักซ์ (SMAW)",
+    options: [
+      { jp: "<ruby>連続供給<rt>れんぞくきょうきゅう</rt></ruby>ワイヤと<ruby>炭酸<rt>たんさん</rt></ruby>ガスでアーク<ruby>溶接<rt>ようせつ</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเชื่อมอาร์กโดยใช้ลวดเชื่อมป้อนต่อเนื่องร่วมกับก๊าซคาร์บอนไดออกไซด์ (MAG)" },
+      { jp: "<ruby>非消耗電極<rt>ひしょうもうでんきょく</rt></ruby>と<ruby>不活性<rt>ふかっせい</rt></ruby>ガスでアーク<ruby>溶接<rt>ようせつ</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเชื่อมอาร์กโดยใช้อิเล็กโทรดแบบไม่สิ้นเปลืองร่วมกับก๊าซเฉื่อย (TIG)" },
+      { jp: "<ruby>重<rt>かさ</rt></ruby>ねた<ruby>板<rt>いた</rt></ruby>を<ruby>加圧通電<rt>かあつつうでん</rt></ruby>して<ruby>抵抗熱<rt>ていこうねつ</rt></ruby>で<ruby>接合<rt>せつごう</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเชื่อมประกบแผ่นโลหะที่ซ้อนกันโดยใช้แรงกดและปล่อยกระแสไฟฟ้า (Resistance)" },
+      { jp: "<ruby>被覆剤付<rt>ひふくざいつ</rt></ruby>きの<ruby>電極棒<rt>でんきょくぼう</rt></ruby>でアーク<ruby>溶接<rt>ようせつ</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเชื่อมอาร์กโดยใช้แท่งลวดเชื่อมที่มีสารพอกหุ้ม (Flux)" }
+    ],
+    ans: 3,
+    exp: "ถูกต้อง! 被覆アーク溶接 (Shielded Metal Arc Welding) ใช้ธูปเชื่อมที่มีสารฟลักซ์พอกหุ้มอยู่รอบแกนลวด"
+  },
+  {
+    code: "問396",
+    cat: "溶接 (การเชื่อม)",
+    jp: "マグ<ruby>溶接<rt>ようせつ</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของการเชื่อมแม็ก (MAG Welding)",
+    options: [
+      { jp: "<ruby>非消耗<rt>ひしょうもう</rt></ruby>タングステン<ruby>電極<rt>でんきょく</rt></ruby>と<ruby>不活性<rt>ふかっせい</rt></ruby>ガスを<ruby>用<rt>もち</rt></ruby>いる<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมที่ใช้อิเล็กโทรดทังสเตนแบบไม่สิ้นเปลืองร่วมกับก๊าซเฉื่อย (TIG)" },
+      { jp: "<ruby>連続供給<rt>れんぞくきょうきゅう</rt></ruby>ワイヤと<ruby>炭酸<rt>たんさん</rt></ruby>ガスや<ruby>混合<rt>こんごう</rt></ruby>ガスでアーク<ruby>溶接<rt>ようせつ</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีเชื่อมอาร์กโดยใช้ลวดเชื่อมป้อนต่อเนื่องร่วมกับก๊าซคาร์บอนไดออกไซด์หรือก๊าซผสม" },
+      { jp: "<ruby>被覆剤付<rt>ひふくざいつ</rt></ruby>き<ruby>溶接棒<rt>ようせつぼう</rt></ruby>と<ruby>空気遮断<rt>くうきしゃだん</rt></ruby>だけを<ruby>用<rt>もち</rt></ruby>いる<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมที่ใช้ลวดเชื่อมหุ้มฟลักซ์และการป้องกันอากาศเท่านั้น" },
+      { jp: "<ruby>溶接対象同士<rt>ようせつたいしょうどうし</rt></ruby>を<ruby>加圧通電<rt>かあつつうでん</rt></ruby>して<ruby>接合<rt>せつごう</rt></ruby>する<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมโดยนำชิ้นงานมาประกบกดและผ่านกระแสไฟฟ้า" }
+    ],
+    ans: 1,
+    exp: "ถูกต้อง! MAG (Metal Active Gas) ใช้ลวดเชื่อมม้วนป้อนอัตโนมัติร่วมกับก๊าซคลุมแนวเชื่อมเช่น CO2 หรือก๊าซผสม (Ar + CO2)"
+  },
+  {
+    code: "問397",
+    cat: "溶接 (การเชื่อม)",
+    jp: "ティグ<ruby>溶接<rt>ようせつ</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของการเชื่อมทิก (TIG Welding)",
+    options: [
+      { jp: "タングステン<ruby>電極<rt>でんきょく</rt></ruby>とアルゴンガスなどの<ruby>不活性<rt>ふかっせい</rt></ruby>ガスを<ruby>用<rt>もち</rt></ruby>いる<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมที่ใช้อิเล็กโทรดทังสเตนร่วมกับก๊าซเฉื่อย เช่น ก๊าซอาร์กอน" },
+      { jp: "<ruby>金属粉末<rt>きんぞくふんまつ</rt></ruby>を<ruby>塗布<rt>とふ</rt></ruby>しながら<ruby>熱風<rt>ねっぷう</rt></ruby>で<ruby>接着<rt>せっちゃく</rt></ruby>する<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมประสานด้วยลมร้อนพร้อมกับทาผงโลหะ" },
+      { jp: "ワイヤを<ruby>高速回転<rt>こうそくかいてん</rt></ruby>させて<ruby>摩擦熱<rt>まさつねつ</rt></ruby>で<ruby>接合<rt>せつごう</rt></ruby>する<ruby>溶接<rt>ようせつ</rt></ruby>。", th: "การเชื่อมประสานด้วยความร้อนจากการเสียดสีโดยหมุนลวดด้วยความเร็วสูง" },
+      { jp: "<ruby>被覆剤付<rt>ひふくざいつ</rt></ruby>き<ruby>棒<rt>ぼう</rt></ruby>で<ruby>空気中<rt>くうきちゅう</rt></ruby>に<ruby>放置<rt>ほうち</rt></ruby>して<ruby>溶接<rt>ようせつ</rt></ruby>する。", th: "การเชื่อมโดยใช้ลวดหุ้มฟลักซ์และปล่อยทิ้งไว้ในอากาศ" }
+    ],
+    ans: 0,
+    exp: "ถูกต้อง! TIG (Tungsten Inert Gas) ใช้แท่งทังสเตนเป็นอิเล็กโทรดที่ไม่หลอมละลาย ร่วมกับก๊าซเฉื่อยอย่างอาร์กอน (Argon)"
+  },
+  {
+    code: "問398",
+    cat: "溶接 (การเชื่อม)",
+    jp: "<ruby>抵抗溶接<rt>ていこうようせつ</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของการเชื่อมความต้านทาน (Resistance Welding)",
+    options: [
+      { jp: "<ruby>回転砥石<rt>かいてんといし</rt></ruby>で<ruby>金属表面<rt>きんぞくひょうめん</rt></ruby>を<ruby>研磨<rt>けんま</rt></ruby>して<ruby>圧着<rt>あっちゃく</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีขัดผิวโลหะด้วยหินเจียรหมุนแล้วอัดประกบ" },
+      { jp: "<ruby>薬剤<rt>やくざい</rt></ruby>で<ruby>表面<rt>ひょうめん</rt></ruby>を<ruby>化学反応<rt>かがくはんのう</rt></ruby>させて<ruby>接着<rt>せっちゃく</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีทำให้ผิวเกิดปฏิกิริยาเคมีด้วยสารเคมีเพื่อยึดติด" },
+      { jp: "ガス<ruby>炎<rt>ほのお</rt></ruby>で<ruby>溶融<rt>ようゆう</rt></ruby>し<ruby>異種金属<rt>いしゅきんぞく</rt></ruby>を<ruby>流<rt>なが</rt></ruby>し<ruby>込<rt>こ</rt></ruby>む<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีหลอมละลายด้วยเปลวไฟก๊าซแล้วเทโลหะต่างชนิดลงไป" },
+      { jp: "<ruby>溶<rt>と</rt></ruby>け<ruby>合<rt>あ</rt></ruby>う<ruby>金属<rt>きんぞく</rt></ruby>を<ruby>加圧<rt>かあつ</rt></ruby>し、<ruby>通電<rt>つうでん</rt></ruby>して<ruby>抵抗熱<rt>ていこうねつ</rt></ruby>で<ruby>接合<rt>せつごう</rt></ruby>する<ruby>方法<rt>ほうほう</rt></ruby>。", th: "วิธีออกแรงกดโลหะที่หลอมรวมกันได้ และปล่อยกระแสไฟฟ้าไหลผ่านเพื่อเชื่อมด้วยความร้อนต้านทาน" }
+    ],
+    ans: 3,
+    exp: "ถูกต้อง! การเชื่อมความต้านทาน (เช่น Spot Welding) ใช้แรงกดบีบชิ้นงานประกบกันแล้วปล่อยกระแสไฟฟ้าสูงให้เกิดความร้อนหลอมติดกัน"
+  },
+  {
+    code: "問399",
+    cat: "溶接欠陥 (ข้อบกพร่องงานเชื่อม)",
+    jp: "<ruby>溶接時<rt>ようせつじ</rt></ruby>に<ruby>生<rt>しょう</rt></ruby>じるブローホールの<ruby>説明<rt>せつめい</rt></ruby>として、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "ข้อใดคือคำอธิบายที่เหมาะสมของรูพรุนตามด (Blowhole) ที่เกิดขึ้นขณะเชื่อม",
+    options: [
+      { jp: "アルコールや<ruby>水分<rt>すいぶん</rt></ruby>や<ruby>空気<rt>くうき</rt></ruby>でガスが<ruby>残留<rt>ざんりゅう</rt></ruby>する<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่มีก๊าซตกค้างอยู่ภายในแนวเชื่อม อันเกิดจากแอลกอฮอล์ ความชื้น หรืออากาศ" },
+      { jp: "<ruby>母材<rt>ぼざい</rt></ruby>の<ruby>弾性回復<rt>だんせいかいふく</rt></ruby>で<ruby>溶接部<rt>ようせつぶ</rt></ruby>が<ruby>変形<rt>へんけい</rt></ruby>する<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่แนวเชื่อมเสียรูปจากการคืนตัวแบบยืดหยุ่นของโลหะชิ้นงาน" },
+      { jp: "<ruby>溶湯<rt>ようとう</rt></ruby>の<ruby>凝固時<rt>ぎょうこじ</rt></ruby>の<ruby>体積不足<rt>たいせきぶそく</rt></ruby>で<ruby>内部<rt>ないぶ</rt></ruby>に<ruby>空洞<rt>くうどう</rt></ruby>が<ruby>残<rt>のこ</rt></ruby>る<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่เกิดโพรงว่างภายในจากการหดตัวไม่พอของปริมาตรขณะแข็งตัว" },
+      { jp: "<ruby>溶接電流<rt>ようせつでんりゅう</rt></ruby>の<ruby>低下<rt>ていか</rt></ruby>で<ruby>溶<rt>と</rt></ruby>け<ruby>込<rt>こ</rt></ruby>みが<ruby>浅<rt>あさ</rt></ruby>くなる<ruby>不良<rt>ふりょう</rt></ruby>。", th: "ข้อบกพร่องที่การซึมลึกของแนวเชื่อมตื้นเกินไปเนื่องจากกระแสไฟเชื่อมลดลง" }
+    ],
+    ans: 0,
+    exp: "ถูกต้อง! Blowhole เกิดจากความชื้น น้ำมัน สนิม หรือก๊าซคลุมไม่พอ ทำให้ฟองก๊าซถูกขังอยู่ภายในแนวเชื่อมที่แข็งตัว"
+  },
+  {
+    code: "問400",
+    cat: "溶接欠陥 (ข้อบกพร่องงานเชื่อม)",
+    jp: "ビード<ruby>上部<rt>じょうぶ</rt></ruby>に<ruby>多数<rt>たすう</rt></ruby>の<ruby>小<rt>ちい</rt></ruby>さな<ruby>穴状<rt>あなじょう</rt></ruby>の<ruby>欠陥<rt>けっかん</rt></ruby>が<ruby>生<rt>しょう</rt></ruby>じた。<ruby>原因<rt>げんいん</rt></ruby>の<ruby>組合<rt>くみあわ</rt></ruby>せとして、<ruby>適切<rt>てきせつ</rt></ruby>なものはどれか。",
+    th: "เกิดข้อบกพร่องลักษณะเป็นรูเล็กๆ จำนวนมากบนผิวหน้าแนวเชื่อม (Bead) ข้อใดคือการจับคู่สาเหตุที่เหมาะสม",
+    options: [
+      { jp: "<ruby>溶湯供給不足<rt>ようとうきょうきゅうぶそく</rt></ruby>、<ruby>反応<rt>はんのう</rt></ruby>は<ruby>凝固収縮<rt>ぎょうこしゅうしゅく</rt></ruby>による。", th: "การป้อนโลหะหลอมเหลวไม่พอ ปฏิกิริยาเกิดจากการหดตัวขณะแข็งตัว" },
+      { jp: "<ruby>溶湯供給不足<rt>ようとうきょうきゅうぶそく</rt></ruby>、<ruby>反応<rt>はんのう</rt></ruby>は<ruby>熱収縮<rt>ねつしゅうしゅく</rt></ruby>による。", th: "การป้อนโลหะหลอมเหลวไม่พอ ปฏิกิริยาเกิดจากการหดตัวเนื่องจากความร้อน" },
+      { jp: "<ruby>溶湯<rt>ようとう</rt></ruby>はガス<ruby>巻<rt>ま</rt></ruby>き<ruby>込<rt>こ</rt></ruby>み、<ruby>反応<rt>はんのう</rt></ruby>は<ruby>岩石粉塵<rt>がんせきふんじん</rt></ruby>による。", th: "น้ำโลหะเกิดการดึงก๊าซเข้าไปปะปน และปฏิกิริยาเกิดจากฝุ่นผง/สิ่งสกปรก" },
+      { jp: "<ruby>溶湯<rt>ようとう</rt></ruby>は<ruby>過大電流<rt>かだいでんりゅう</rt></ruby>、<ruby>反応<rt>はんのう</rt></ruby>は<ruby>収縮変形<rt>しゅうしゅくへんけい</rt></ruby>による。", th: "น้ำโลหะเกิดจากกระแสไฟสูงเกินไป ปฏิกิริยาเกิดจากการเสียรูปจากการหดตัว" }
+    ],
+    ans: 2,
+    exp: "ถูกต้อง! การเกิดรูพรุนจำนวนมากบนผิวแนวเชื่อม (Pit / Blowhole) เกิดจากการดึงเอาก๊าซเข้าไปในบ่อหลอมเหลวและสิ่งสกปรกปนเปื้อน"
+  }
+];
+
+const labels = ["ア", "イ", "ウ", "エ"];
+let currentIdx = 0;
+let userAnswers = new Array(questions.length).fill(null);
+let starred = new Array(questions.length).fill(false);
+
+function render() {
+  const q = questions[currentIdx];
+  document.getElementById("q-idx").textContent = currentIdx + 1;
+  document.getElementById("q-total").textContent = questions.length;
+  document.getElementById("q-code").textContent = q.code;
+  document.getElementById("q-cat").textContent = q.cat;
+  document.getElementById("q-jp").innerHTML = q.jp;
+  document.getElementById("q-th").textContent = q.th;
+
+  const starBtn = document.getElementById("star-btn");
+  starBtn.textContent = starred[currentIdx] ? "★" : "☆";
+  starBtn.classList.toggle("starred", starred[currentIdx]);
+
+  const optList = document.getElementById("opt-list");
+  optList.innerHTML = "";
+  const chosen = userAnswers[currentIdx];
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    if (chosen !== null) {
+      if (i === q.ans) btn.classList.add("correct");
+      else if (i === chosen) btn.classList.add("wrong");
+    }
+    btn.innerHTML = `
+      <div class="opt-label">${labels[i]}</div>
+      <div class="opt-content">
+        <div class="opt-jp">${opt.jp}</div>
+        <div class="opt-th th-text">${opt.th}</div>
+      </div>
+    `;
+    btn.onclick = () => selectOption(i);
+    optList.appendChild(btn);
+  });
+
+  const expBox = document.getElementById("exp-box");
+  document.getElementById("exp-text").textContent = q.exp;
+  if (chosen !== null) expBox.classList.add("show");
+  else expBox.classList.remove("show");
+
+  document.getElementById("next-btn").textContent = chosen !== null ? "ถัดไป →" : "ข้าม →";
+  updateStats();
+}
+
+function selectOption(idx) {
+  if (userAnswers[currentIdx] !== null) return;
+  userAnswers[currentIdx] = idx;
+  render();
+}
+
+function toggleExpManual() {
+  document.getElementById("exp-box").classList.toggle("show");
+}
+
+function updateStats() {
+  let c = 0, w = 0, d = 0;
+  userAnswers.forEach((ans, i) => {
+    if (ans !== null) {
+      d++;
+      if (ans === questions[i].ans) c++;
+      else w++;
+    }
+  });
+  document.getElementById("c-cnt").textContent = c;
+  document.getElementById("w-cnt").textContent = w;
+  document.getElementById("done-cnt").textContent = d;
+  document.getElementById("prog-bar").style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
+}
+
+function nextQ() {
+  if (currentIdx < questions.length - 1) { currentIdx++; render(); }
+}
+
+function prevQ() {
+  if (currentIdx > 0) { currentIdx--; render(); }
+}
+
+function toggleStar() {
+  starred[currentIdx] = !starred[currentIdx];
+  render();
+}
+
+function toggleFurigana() {
+  document.body.classList.toggle("hide-furigana");
+  const btn = document.getElementById("btn-furi");
+  const off = document.body.classList.contains("hide-furigana");
+  btn.textContent = off ? "ฟุริงะนะ: ปิด" : "ฟุริงะนะ: เปิด";
+  btn.classList.toggle("active", !off);
+}
+
+function toggleThai() {
+  document.body.classList.toggle("hide-thai");
+  const btn = document.getElementById("btn-thai");
+  const off = document.body.classList.contains("hide-thai");
+  btn.textContent = off ? "คำแปล: ปิด" : "คำแปล: เปิด";
+  btn.classList.toggle("active", !off);
+}
+
+function resetQuiz() {
+  userAnswers.fill(null);
+  currentIdx = 0;
+  render();
+}
+
+function openModal() {
+  const grid = document.getElementById("grid-nums");
+  grid.innerHTML = "";
+  questions.forEach((q, i) => {
+    const item = document.createElement("div");
+    item.className = "num-item";
+    if (i === currentIdx) item.classList.add("current");
+    if (userAnswers[i] !== null) {
+      item.classList.add(userAnswers[i] === q.ans ? "done-ok" : "done-no");
+    }
+    item.innerHTML = `${q.code.replace("問","")}${starred[i] ? '<span class="num-star">★</span>' : ''}`;
+    item.onclick = () => {
+      currentIdx = i;
+      document.getElementById("modal").classList.remove("open");
+      render();
+    };
+    grid.appendChild(item);
+  });
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(e) {
+  if (e.target.id === "modal") document.getElementById("modal").classList.remove("open");
+}
+
+render();
+</script>
+</body>
+</html>
